@@ -1,113 +1,136 @@
-﻿using System;
-using System.Collections.Generic;
+﻿{
+    using System;
+    using System.Collections.Generic;
 
-namespace bokningssystem
+    class Program
 {
-    internal class Program
+    static void Main(string[] args)
     {
-        static List<string> bookedSlots = new List<string>();
-
-        static void Main(string[] args)
+        // Lista med tillgängliga tider för en vecka (måndag till fredag)
+        Dictionary<string, List<string>> weeklySchedule = new Dictionary<string, List<string>>
         {
-            bool exit = false;
+            { "Måndag", new List<string> { "08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00" } },
+            { "Tisdag", new List<string> { "08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00" } },
+            { "Onsdag", new List<string> { "08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00" } },
+            { "Torsdag", new List<string> { "08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00" } },
+            { "Fredag", new List<string> { "08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00" } }
+        };
 
-            while (!exit)
-            {
-                Console.Clear();
-                Console.WriteLine("Welcome to the Booking System");
-                Console.WriteLine("1. Book Tire Change");
-                Console.WriteLine("2. Book Tire Setting");
-                Console.WriteLine("3. View Booked Times");
-                Console.WriteLine("4. Exit");
-                Console.Write("Please select an option: ");
+        // Lista med bokade tider kopplade till personer och tjänster
+        Dictionary<string, (string Name, string Service)> bookedAppointments = new Dictionary<string, (string Name, string Service)>();
 
-                switch (Console.ReadLine())
-                {
-                    case "1":
-                        BookService("Tire Change");
-                        break;
-                    case "2":
-                        BookService("Tire Setting");
-                        break;
-                    case "3":
-                        ViewBookedTimes();
-                        break;
-                    case "4":
-                        exit = true;
-                        break;
-                    default:
-                        Console.WriteLine("Invalid option, please try again.");
-                        break;
-                }
-            }
-        }
-
-        static void BookService(string serviceType)
+        while (true)
         {
-            Console.Clear();
-            Console.WriteLine($"Booking {serviceType}");
-            List<string> availableSlots = GetAvailableTimeSlots();
-            for (int i = 0; i < availableSlots.Count; i++)
-            {
-                Console.WriteLine($"{i + 1}. {availableSlots[i]}");
-            }
-            Console.Write("Please select a time slot: ");
-            if (int.TryParse(Console.ReadLine(), out int slotIndex) && slotIndex > 0 && slotIndex <= availableSlots.Count)
-            {
-                string selectedSlot = availableSlots[slotIndex - 1];
-                if (!bookedSlots.Contains(selectedSlot))
-                {
-                    bookedSlots.Add(selectedSlot);
-                    Console.WriteLine($"{serviceType} booked successfully at {selectedSlot}!");
-                }
-                else
-                {
-                    Console.WriteLine("This time slot is already booked. Please select another slot.");
-                }
-            }
-            else
-            {
-                Console.WriteLine("Invalid selection, returning to main menu.");
-            }
-            Console.WriteLine("Press any key to return to the main menu.");
-            Console.ReadKey();
-        }
+            Console.WriteLine("\n*** Däckbyte Bokningssystem ***");
+            Console.WriteLine("1. Visa tillgängliga tider");
+            Console.WriteLine("2. Boka en tid");
+            Console.WriteLine("3. Visa bokade tider");
+            Console.WriteLine("4. Avsluta");
+            Console.Write("Välj ett alternativ: ");
 
-        static void ViewBookedTimes()
-        {
-            Console.Clear();
-            Console.WriteLine("Booked Times:");
-            if (bookedSlots.Count == 0)
-            {
-                Console.WriteLine("No times are booked yet.");
-            }
-            else
-            {
-                foreach (var slot in bookedSlots)
-                {
-                    Console.WriteLine(slot);
-                }
-            }
-            Console.WriteLine("Press any key to return to the main menu.");
-            Console.ReadKey();
-        }
+            string choice = Console.ReadLine();
 
-        static List<string> GetAvailableTimeSlots()
-        {
-            List<string> timeSlots = new List<string>();
-            DateTime startTime = DateTime.Today.AddHours(8); // 08:00 AM
-            DateTime endTime = DateTime.Today.AddHours(17); // 05:00 PM
-
-            while (startTime < endTime)
+            switch (choice)
             {
-                if (startTime.Hour != 11) // Skip 11:00 to 12:00
-                {
-                    timeSlots.Add(startTime.ToString("HH:mm"));
-                }
-                startTime = startTime.AddMinutes(30);
-            }
+                case "1":
+                    ShowAvailableTimes(weeklySchedule);
+                    break;
 
-            return timeSlots;
+                case "2":
+                    BookTime(weeklySchedule, bookedAppointments);
+                    break;
+
+                case "3":
+                    ShowBookedAppointments(bookedAppointments);
+                    break;
+
+                case "4":
+                    Console.WriteLine("Avslutar programmet. Tack för att du använde bokningssystemet!");
+                    return;
+
+                default:
+                    Console.WriteLine("Ogiltigt val. Försök igen.");
+                    break;
+            }
         }
     }
+
+    static void ShowAvailableTimes(Dictionary<string, List<string>> weeklySchedule)
+    {
+        Console.WriteLine("\nTillgängliga tider för veckan:");
+
+        foreach (var day in weeklySchedule)
+        {
+            Console.WriteLine($"{day.Key}:");
+            if (day.Value.Count == 0)
+            {
+                Console.WriteLine("  Inga lediga tider.");
+            }
+            else
+            {
+                foreach (var time in day.Value)
+                {
+                    Console.WriteLine($"  {time}");
+                }
+            }
+        }
+    }
+
+    static void BookTime(Dictionary<string, List<string>> weeklySchedule, Dictionary<string, (string Name, string Service)> bookedAppointments)
+    {
+        Console.WriteLine("\nAnge vilken dag du vill boka (Måndag, Tisdag, Onsdag, Torsdag, Fredag):");
+        string day = Console.ReadLine();
+
+        if (!weeklySchedule.ContainsKey(day))
+        {
+            Console.WriteLine("Ogiltig dag. Försök igen.");
+            return;
+        }
+
+        Console.WriteLine("Ange tiden du vill boka (HH:MM):");
+        string timeToBook = Console.ReadLine();
+
+        if (weeklySchedule[day].Contains(timeToBook))
+        {
+            Console.WriteLine("Ange ditt namn:");
+            string name = Console.ReadLine();
+
+            Console.WriteLine("Ange vilken tjänst som ska utföras (t.ex. Däckbyte, Service, Reparation):");
+            string service = Console.ReadLine();
+
+            string appointmentKey = $"{day} {timeToBook}";
+
+            if (bookedAppointments.ContainsKey(appointmentKey))
+            {
+                Console.WriteLine("Tiden är redan bokad. Försök igen.");
+                return;
+            }
+
+            weeklySchedule[day].Remove(timeToBook);
+            bookedAppointments[appointmentKey] = (name, service);
+            Console.WriteLine($"Tiden {timeToBook} på {day} har bokats för {name} för tjänsten {service}!");
+        }
+        else
+        {
+            Console.WriteLine("Tiden är inte tillgänglig eller ogiltig. Försök igen.");
+        }
+    }
+
+    static void ShowBookedAppointments(Dictionary<string, (string Name, string Service)> bookedAppointments)
+    {
+        Console.WriteLine("\nBokade tider:");
+
+        if (bookedAppointments.Count == 0)
+        {
+            Console.WriteLine("Inga bokade tider finns.");
+        }
+        else
+        {
+            foreach (var appointment in bookedAppointments)
+            {
+                Console.WriteLine($"{appointment.Key}: {appointment.Value.Name} - {appointment.Value.Service}");
+            }
+        }
+    }
+}
 }
